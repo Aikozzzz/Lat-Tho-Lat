@@ -6,7 +6,7 @@ Lat Tho Lat connects campaign organizers with donors. Organizers can explain the
 
 The application uses **Next.js as the full-stack framework**, with React, TypeScript, Tailwind CSS, Lucide React, reusable components, Zod, Neon PostgreSQL, Prisma, and Clerk authentication.
 
-> **Project status:** The first public UI foundation is implemented in `src/`: responsive campaign discovery, funding progress patterns, and a donation-intent dialog. Backend authentication, persistence, verification, and organizer/admin workflows remain on the roadmap. See the implementation plan and research notes in [`docs/SDD.md`](docs/SDD.md).
+> **Project status:** The public UI and M4 server-side workflow boundaries are implemented in `src/`: responsive campaign discovery, funding progress patterns, validated pending donations, organizer updates, donor history, and admin review actions. Production Clerk/Neon credentials, migrations, payment evidence, and deployment hardening remain. See the implementation plan and research notes in [`docs/SDD.md`](docs/SDD.md).
 
 ## Contents
 
@@ -501,15 +501,15 @@ Run `prisma generate` before type checking or building a fresh checkout that imp
 
 ## Implementation roadmap
 
-- [ ] Initialize the project and verify Clerk sign-in.
-- [ ] Configure Neon, migrate the starter schema, and resolve local users.
-- [ ] Build reusable controls, navigation, and responsive layouts.
-- [ ] Implement organizer campaign drafts and submission.
-- [ ] Implement admin campaign review and public discovery.
-- [ ] Implement pending donations, verification, and donor history.
-- [ ] Calculate verified funding progress and publish campaign updates.
-- [ ] Add audit records, rejection reasons, and duplicate-payment review.
-- [ ] Add focused tests and finish deployment configuration.
+- [x] Initialize the project and add Clerk sign-in/sign-up boundaries.
+- [ ] Configure Neon credentials, deploy the schema, and resolve production local users.
+- [x] Build reusable controls, navigation, and responsive layouts.
+- [x] Implement organizer campaign drafts and submission boundaries.
+- [x] Implement admin campaign review and public discovery.
+- [x] Implement pending donations, verification actions, and donor history.
+- [x] Calculate verified funding progress and publish campaign updates.
+- [x] Add audit records, rejection reasons, and duplicate-payment review boundaries.
+- [x] Add focused domain checks; UI tests and deployment configuration remain.
 
 Possible later extensions include campaign images, payment-receipt uploads, notifications, Burmese/English localization, bookmarks, and verified payment gateway integration. These require implementation and, where applicable, an additional service choice.
 

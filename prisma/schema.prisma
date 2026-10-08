@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+enum CampaignStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum DonationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  KBZPAY
+  WAVEPAY
+  BANK_TRANSFER
+}
+
+model User {
+  id        String           @id @default(cuid())
+  clerkId   String           @unique
+  role      Role             @default(MEMBER)
+  campaigns Campaign[]       @relation("CampaignOrganizer")
+  donations Donation[]
+  updates   CampaignUpdate[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([role])
+}
+
+model Campaign {
+  id              String           @id @default(cuid())
+  title           String
+  description     String
+  category        String
+  location        String?
+  imageUrl        String?
+  goalAmount      Decimal          @db.Decimal(18, 0)
+  deadline        DateTime
+  status          CampaignStatus   @default(DRAFT)
+  organizerId     String
+  organizer       User             @relation("CampaignOrganizer", fields: [organizerId], references: [id])
+  donations       Donation[]
+  updates         CampaignUpdate[]
+  rejectionReason String?
+  reviewedAt      DateTime?
+  reviewedById    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@index([organizerId])
+  @@index([deadline])
+}
+
+model Donation {
+  id               String         @id @default(cuid())
+  campaignId       String
+  campaign         Campaign       @relation(fields: [campaignId], references: [id])
+  donorId          String
+  donor            User           @relation(fields: [donorId], references: [id])
+  amount           Decimal        @db.Decimal(18, 0)
+  currency         String         @default("MMK")
+  status           DonationStatus @default(PENDING)
+  isAnonymous      Boolean        @default(false)
+  paymentMethod    PaymentMethod
+  paymentReference String?
+  rejectionReason  String?
+  reviewedAt       DateTime?
+  reviewedById     String?
+  idempotencyKey   String         @unique
+  createdAt        DateTime       @default(now())
+  verifiedAt       DateTime?
+
+  @@index([campaignId, status])
+  @@index([donorId, createdAt])
+}
+
+model CampaignUpdate {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  title      String
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([campaignId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+}
