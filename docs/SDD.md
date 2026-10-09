@@ -1,6 +1,6 @@
 # Lat Tho Lat — Software Design Document
 
-**Status:** M1–M4 implemented in demo-safe mode; production service wiring remains  
+**Status:** M1–M5 implemented; production migration and release verification remain  
 **Date:** 2026-10-08  
 **Scope:** Public discovery, donation workflow, organizer dashboard, and admin review foundation
 
@@ -12,7 +12,7 @@ Lat Tho Lat ("hands to hands") is a community crowdfunding platform for meaningf
 2. A small contribution is easy to make in Myanmar Kyat.
 3. The platform shows how shared giving is moving a campaign forward.
 
-The implementation follows the product and domain contract in `README.md`. The repository now contains the UI foundation plus server-side boundaries for Clerk, Prisma/Neon, validated donations, campaign updates, donor history, and admin review. When external credentials are absent, the app intentionally falls back to demo data so the interface remains previewable.
+The implementation follows the product and domain contract in `README.md`. The repository contains the UI foundation plus server-side boundaries for self-managed authentication, Prisma/Neon, validated donations, campaign updates, donor history, and admin review. Public campaign pages can still use typed demo data when the database is absent; protected actions never create an implicit demo session.
 
 ## 2. Research synthesis
 
@@ -44,15 +44,17 @@ Mobbin references were reviewed for the three requested patterns. The goal was t
 - Trust and impact sections that communicate verification and progress updates.
 - Component and styling foundation for future App Router pages.
 - Public campaign list and detail routes backed by a service boundary.
-- Optional Clerk provider, protected `/dashboard` and `/admin` routes, and demo-mode auth fallback.
+- Self-managed email/password authentication, database-backed sessions, protected `/dashboard` and `/admin` routes, and server-side RBAC.
 - Prisma 7 schema/configuration, generated client, `.env.example`, and a seed script.
 - Zod schemas and Server Actions for campaign drafts, contribution submission, organizer updates, campaign review, and donation review.
 - Idempotent pending-donation creation with server-side campaign eligibility checks.
+- Payment-evidence metadata schema/action boundary; file bytes remain delegated to a future storage provider.
 - Organizer/donor dashboard, admin review queue, loading/error/empty states, and a small English/Burmese copy map.
+- Health endpoint, environment check script, and stable `data-testid` hooks for future UI automation.
 
 ### Deliberately deferred
 
-- Clerk account configuration and real session testing (the provider and route boundary are implemented, but keys are not present in this workspace).
+- Real database connection, migration deployment, and end-to-end authentication testing.
 - Neon connection, migrations, and real seed execution (schema, generated client, and seed script are implemented).
 - Payment-evidence file uploads and gateway callbacks.
 - Burmese localization, notifications, and payment gateway callbacks.
@@ -74,7 +76,7 @@ src/app/page.tsx                    homepage entrypoint
 src/app/campaigns/                  public list, detail, loading, and error states
 src/app/dashboard/                  donor/organizer workspace
 src/app/admin/                      protected campaign/donation review queue
-src/app/sign-in/ and sign-up/       Clerk routes with demo fallback
+src/app/sign-in/ and sign-up/       Self-managed credential forms
 src/app/globals.css                 design tokens and global styles
 src/components/layout/              navbar and footer
 src/components/ui/                  Button, Badge, ProgressBar, ProgressRing
@@ -84,10 +86,11 @@ src/components/dashboard/           CampaignForm, UpdateForm
 src/components/home/                HomeExperience composition and local state
 src/lib/data.ts                     typed demo campaigns and categories
 src/lib/utils.ts                    formatting and progress helpers
-src/lib/auth.ts                     Clerk-to-local-user resolution with demo fallback
+src/lib/auth.ts                     Password-session lookup and page/action guards
+src/lib/password.ts                 Scrypt password hashing and verification
 src/lib/db.ts                       PrismaPg singleton and database availability boundary
 src/lib/validations/                Zod schemas for writes
-src/server/actions/                 Server Actions for member and admin writes
+src/server/actions/                 Server Actions for auth, user, and admin writes
 src/server/services/                Campaign and donation domain services
 prisma/schema.prisma                PostgreSQL data model
 prisma/seed.ts                      Development seed data
@@ -103,6 +106,18 @@ The UI names and states intentionally map to the README data model:
 - `goal`, `deadline`, and `donors` are displayed as read-only campaign facts.
 - A future `Donation` server action must validate a whole-MMK amount, eligible campaign status, payment method, and idempotency key on the server.
 - The submit action creates a `PENDING` donation through a validated Server Action when the database is configured, and uses an idempotent in-memory demo store otherwise.
+
+### Authentication control
+
+- `src/app/sign-in` and `src/app/sign-up` submit validated email/password forms through Server Actions.
+- Passwords are hashed with Node's `scrypt`; only the encoded hash is stored in `User.passwordHash`.
+- A random opaque token is stored in an HTTP-only, `SameSite=Lax` cookie. Only its SHA-256 hash and expiry are stored in `Session`.
+- `src/proxy.ts` provides an early cookie check for `/dashboard` and `/admin`; the page then verifies the session against the database.
+- Every authenticated Server Action calls `requireCurrentAppUser()`, which resolves the session user from Prisma.
+- RBAC has exactly two roles: new accounts receive `USER`; `ADMIN` is assigned through a trusted database/admin process and is checked server-side for review actions.
+- No browser field, hidden input, or client state can grant `ADMIN`. Missing database configuration means protected pages redirect to sign-in and auth actions return a setup error.
+
+The trusted promotion path is `npm run db:promote-admin -- user@example.com`, which only updates an existing account from `USER` to `ADMIN`.
 
 ## 5. Interaction flows
 
@@ -157,7 +172,7 @@ The UI names and states intentionally map to the README data model:
 
 ### M4 — Backend workflow (implemented)
 
-- [x] Add Clerk provider, sign-in/sign-up routes, and local user resolution.
+- [x] Add self-managed sign-in/sign-up routes, hashed passwords, sessions, and local user resolution.
 - [x] Add Prisma/Neon schema, generated client, and seeded development campaigns.
 - [x] Replace demo data with server-query service boundaries and format Decimal values at UI boundaries.
 - [x] Implement validated donation Server Action with idempotency and `PENDING` status.
@@ -168,6 +183,7 @@ The UI names and states intentionally map to the README data model:
 - [x] Add a runnable domain-check script for progress, validation, and demo idempotency.
 - [ ] Add UI tests for discovery, filtering, donation intent, and mobile keyboard flow.
 - [x] Add error/loading/empty states and an English/Burmese copy map.
+- [x] Add deployment health/configuration checks and payment-evidence metadata boundaries.
 - [ ] Run production build, migration deploy, and accessibility review.
 
 ## 8. Acceptance criteria for the current slice
@@ -190,9 +206,10 @@ npm install
 npm run lint
 npx tsc --noEmit
 npm run test:domain
+npm run check:env
 npm run db:validate
 npm run db:generate
 npm run build
 ```
 
-`npm run lint`, `npx tsc --noEmit`, and `npm run db:validate` pass in this workspace. The domain-check and production build commands are implemented but this managed environment blocks their child-process workers with `spawn EPERM`. A real Neon connection, `DIRECT_URL`, Clerk keys, and migration deployment are still required before production acceptance.
+`npm run lint`, `npx tsc --noEmit`, and `npm run db:validate` pass in this workspace. The domain-check and production build commands are implemented but this managed environment blocks their child-process workers with `spawn EPERM`. A real Neon connection, `DIRECT_URL`, migration deployment, and end-to-end auth test are still required before production acceptance.

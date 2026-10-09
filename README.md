@@ -4,9 +4,9 @@
 
 Lat Tho Lat connects campaign organizers with donors. Organizers can explain their goals, collect contributions in Myanmar Kyat (MMK), and publish updates showing how funds are used. Donors can discover campaigns, follow funding progress, and review their contribution history.
 
-The application uses **Next.js as the full-stack framework**, with React, TypeScript, Tailwind CSS, Lucide React, reusable components, Zod, Neon PostgreSQL, Prisma, and Clerk authentication.
+The application uses **Next.js as the full-stack framework**, with React, TypeScript, Tailwind CSS, Lucide React, reusable components, Zod, Neon PostgreSQL, Prisma, and self-managed email/password authentication.
 
-> **Project status:** The public UI and M4 server-side workflow boundaries are implemented in `src/`: responsive campaign discovery, funding progress patterns, validated pending donations, organizer updates, donor history, and admin review actions. Production Clerk/Neon credentials, migrations, payment evidence, and deployment hardening remain. See the implementation plan and research notes in [`docs/SDD.md`](docs/SDD.md).
+> **Project status:** The public UI, self-managed authentication, RBAC, and M4 server-side workflow boundaries are implemented in `src/`: responsive campaign discovery, funding progress patterns, validated pending donations, organizer updates, donor history, and admin review actions. Production Neon credentials, migrations, payment evidence, and deployment hardening remain. See the implementation plan and research notes in [`docs/SDD.md`](docs/SDD.md).
 
 ## Contents
 
@@ -49,7 +49,7 @@ The application uses **Next.js as the full-stack framework**, with React, TypeSc
 | Zod | Runtime validation of form inputs and server request payloads |
 | Neon PostgreSQL | Hosted relational database for application data |
 | Prisma ORM | Data models, migrations, and typed database queries |
-| Clerk | Sign-up, sign-in, account management, and authenticated sessions |
+| Custom auth | Scrypt-hashed passwords, HTTP-only sessions, sign-up/sign-in, and sign-out |
 
 Next.js handles the frontend and backend in one project. Server Components load data; Client Components provide interactions; Server Actions handle application mutations; Route Handlers handle HTTP integrations when needed.
 
@@ -57,13 +57,13 @@ The examples below target **Next.js 16 and Prisma ORM 7**. Keep the installed Pr
 
 ## Roles and planned features
 
-Use a default `MEMBER` role for normal accounts. A member can both donate and organize campaigns. `ADMIN` is a separately assigned role.
+Use a default `USER` role for normal accounts. A user can both donate and organize campaigns. `ADMIN` is a separately assigned role.
 
 | User | Planned capabilities |
 | --- | --- |
 | Visitor | Browse published campaigns, search, filter, and read public updates |
-| Member as donor | Submit a donation, view its verification status, and review personal donation history |
-| Member as organizer | Create drafts, submit campaigns for review, manage owned campaigns, and publish updates |
+| User as donor | Submit a donation, view its verification status, and review personal donation history |
+| User as organizer | Create drafts, submit campaigns for review, manage owned campaigns, and publish updates |
 | Admin | Review campaigns, approve or reject donation evidence, moderate content, and inspect platform activity |
 
 ### Campaign discovery
@@ -98,11 +98,11 @@ Use a default `MEMBER` role for normal accounts. A member can both donate and or
 | Public interface | Next.js pages and reusable React components styled with Tailwind CSS |
 | Interactive interface | Client Components for forms, dialogs, filters, and local UI state |
 | Server logic | Server Actions and Route Handlers validate requests, authenticate users, and check permissions |
-| Authentication | Clerk supplies the authenticated user ID |
-| Application identity | A Prisma `User` record links its `clerkId` to campaigns and donations |
+| Authentication | Server Actions verify email/password credentials and issue database-backed sessions |
+| Application identity | A Prisma `User` record links its email and role to campaigns and donations |
 | Persistence | Server-only Prisma Client accesses Neon PostgreSQL |
 
-For each write request: obtain the Clerk identity, resolve the local user, validate input with Zod, check role or ownership, and perform the database operation. Return only the data needed by the interface.
+For each write request: resolve the HTTP-only session, load the local user, validate input with Zod, check role or ownership, and perform the database operation. Return only the data needed by the interface.
 
 Database queries and secret keys stay in server code. Use the Node.js runtime for the PostgreSQL adapter shown below.
 
@@ -131,24 +131,25 @@ These paths are a proposed layout. Create feature files as their functionality i
 | `src/app/page.tsx` | Public homepage |
 | `src/app/campaigns/page.tsx` | Campaign discovery |
 | `src/app/campaigns/[id]/page.tsx` | Campaign details |
-| `src/app/dashboard/` | Member dashboard, campaigns, and donation history |
+| `src/app/dashboard/` | User dashboard, campaigns, and donation history |
 | `src/app/admin/` | Campaign review and donation verification |
-| `src/app/sign-in/[[...sign-in]]/page.tsx` | Clerk sign-in page |
-| `src/app/sign-up/[[...sign-up]]/page.tsx` | Clerk sign-up page |
+| `src/app/sign-in/[[...sign-in]]/page.tsx` | Self-managed sign-in page |
+| `src/app/sign-up/[[...sign-up]]/page.tsx` | Self-managed sign-up page |
 | `src/app/api/` | Route Handlers for integrations, if required |
 | `src/components/ui/` | Shared interface primitives |
 | `src/components/layout/` | Navbar, footer, and dashboard layout |
 | `src/components/campaigns/` | Campaign cards, forms, and progress displays |
 | `src/components/donations/` | Donation forms and history |
 | `src/lib/db.ts` | Server-only Prisma Client |
-| `src/lib/auth.ts` | Clerk-to-local-user resolution |
+| `src/lib/auth.ts` | Session lookup, sign-in guards, and cookie lifecycle |
+| `src/lib/password.ts` | Scrypt password hashing and verification |
 | `src/lib/permissions.ts` | Role and resource-ownership checks |
 | `src/lib/validations/` | Shared Zod schemas |
 | `src/lib/money.ts` | MMK formatting and amount conversion |
 | `src/server/actions/` | Server Actions for user operations |
 | `src/server/services/` | Campaign and donation business rules |
 | `src/generated/prisma/` | Generated Prisma Client |
-| `src/proxy.ts` | Clerk middleware for Next.js 16 |
+| `src/proxy.ts` | Early cookie gate for protected routes |
 | `prisma/schema.prisma` | Database schema |
 | `prisma/migrations/` | Versioned database migrations |
 | `prisma.config.ts` | Prisma CLI configuration |
@@ -162,7 +163,6 @@ Run terminal commands from the project root unless a different location is state
 - Node.js **22.12 or newer within the 22.x release line**, or Node.js 24.x.
 - npm and Git.
 - A Neon account and a development PostgreSQL database.
-- A Clerk account and a development application.
 
 ### 2. Create the Next.js project
 
@@ -178,7 +178,7 @@ This scaffolds Next.js, React, TypeScript, Tailwind CSS, and ESLint. Keep the ge
 ### 3. Install project dependencies
 
 ```bash
-npm install @clerk/nextjs lucide-react zod server-only
+npm install lucide-react zod server-only
 npm install @prisma/client@7 @prisma/adapter-pg@7 pg dotenv
 npm install --save-dev prisma@7 @types/pg
 npx prisma init --datasource-provider postgresql
@@ -186,11 +186,9 @@ npx prisma init --datasource-provider postgresql
 
 `@prisma/adapter-pg` and `pg` connect Prisma to PostgreSQL. `dotenv` loads database variables for Prisma CLI commands. `server-only` helps prevent server utilities from entering client bundles.
 
-### 4. Configure Neon and Clerk
+### 4. Configure Neon and local authentication
 
 In Neon, create a development database and copy both its **pooled** and **direct** PostgreSQL connection strings. Preserve the TLS parameters provided by Neon.
-
-In Clerk, create a development application, choose the desired sign-in methods, and obtain its publishable key and secret key.
 
 Create `.env` in the project root, replacing every placeholder:
 
@@ -201,11 +199,6 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST-pooler/DB?sslmode=require"
 # Direct connection for Prisma CLI and migrations
 DIRECT_URL="postgresql://USER:PASSWORD@HOST/DB?sslmode=require"
 
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_REPLACE_ME"
-CLERK_SECRET_KEY="sk_test_REPLACE_ME"
-
-NEXT_PUBLIC_CLERK_SIGN_IN_URL="/sign-in"
-NEXT_PUBLIC_CLERK_SIGN_UP_URL="/sign-up"
 ```
 
 Copy the placeholder template to `.env.example` for teammates. Keep actual `.env` files out of Git, while allowing `.env.example`. Restart the development server after environment changes.
@@ -272,58 +265,25 @@ npx prisma generate
 
 If the database role cannot create the temporary shadow database needed by `migrate dev`, configure a separate development shadow database using `datasource.shadowDatabaseUrl`. Use a dedicated database for this purpose.
 
-### 6. Add Clerk authentication
+### 6. Use self-managed authentication
 
-In `src/app/layout.tsx`, preserve the scaffold's styles and fonts, and wrap page content inside `<ClerkProvider>` within `<body>`:
+The app owns the credential and session boundary. Sign-up and sign-in are reusable React forms backed by Server Actions. Passwords are hashed with Node's `scrypt`; the browser receives only a random HTTP-only session cookie. Prisma stores the session token hash and expiry, so a raw token is never persisted.
 
-```tsx
-import { ClerkProvider } from "@clerk/nextjs";
-import "./globals.css";
+New accounts always receive the `USER` role. The `ADMIN` role is never accepted from form data; promote a trusted account with the controlled CLI command below, then verify `/admin` with that account. Both `/dashboard` and `/admin` use an early cookie gate in `src/proxy.ts` plus a database-backed `requirePageUser()` check. Every mutation calls `requireCurrentAppUser()` and enforces role or ownership server-side.
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <ClerkProvider>{children}</ClerkProvider>
-      </body>
-    </html>
-  );
-}
+Run the database migration before testing the forms:
+
+```bash
+npx prisma migrate dev --name auth_sessions
+npx prisma generate
+npm run dev
 ```
 
-Create `src/proxy.ts`:
+After the target account signs up, promote it from a trusted terminal:
 
-```ts
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-
-const isProtected = createRouteMatcher(["/dashboard(.*)", "/admin(.*)"]);
-
-export default clerkMiddleware(async (auth, request) => {
-  if (isProtected(request)) await auth.protect();
-});
-
-export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)", "/api/(.*)"],
-};
+```bash
+npm run db:promote-admin -- admin@example.com
 ```
-
-For Next.js 15 and earlier, use `src/middleware.ts` instead. Route protection checks sign-in; admin permissions still need server-side role checks.
-
-Create `src/app/sign-in/[[...sign-in]]/page.tsx`:
-
-```tsx
-import { SignIn } from "@clerk/nextjs";
-export default function Page() { return <SignIn />; }
-```
-
-Create `src/app/sign-up/[[...sign-up]]/page.tsx`:
-
-```tsx
-import { SignUp } from "@clerk/nextjs";
-export default function Page() { return <SignUp />; }
-```
-
-Add visible sign-in/sign-up links and Clerk's `UserButton` to the navigation as the interface is built.
 
 ### 7. Start development
 
@@ -339,7 +299,7 @@ This starter schema supports members, campaigns, contributions, and public updat
 
 ```prisma
 enum Role {
-  MEMBER
+  USER
   ADMIN
 }
 
@@ -360,12 +320,24 @@ enum DonationStatus {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  clerkId   String     @unique
-  role      Role       @default(MEMBER)
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String?
+  passwordHash String
+  role         Role       @default(USER)
   campaigns Campaign[]
   donations Donation[]
+  sessions  Session[]
   createdAt DateTime   @default(now())
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Campaign {
@@ -421,7 +393,7 @@ model CampaignUpdate {
 
 This MVP accepts whole-kyat amounts and stores them as fixed-precision decimals. Serialize Prisma Decimal values as strings at JSON and client boundaries. Compute `amountRaised` from donations currently marked `VERIFIED`; pending, rejected, and refunded records do not count.
 
-Create or resolve the local user after checking `await auth()` on the server. Upsert by the unique `clerkId`, and let new users receive the database's `MEMBER` default. Clerk manages credentials; the application stores relationships and roles. Admin promotion must be performed through a trusted administrative process.
+Resolve the local user from the HTTP-only session on the server. New accounts receive the database's `USER` default, while admin promotion must be performed through a trusted database/admin process. Never trust a role, donor ID, organizer ID, or session identifier supplied by the browser.
 
 Before expanding the app, add review reasons, reviewer IDs, audit records, and payment-evidence metadata as needed. Uploaded images or receipts require a separately selected file-storage service; Neon stores their metadata rather than providing that upload service.
 
@@ -451,10 +423,10 @@ Validate on the client for feedback and again on the server before writing. The 
 
 | Operation | Required server check |
 | --- | --- |
-| Create a campaign | Signed-in member; organizer ID comes from the session |
+| Create a campaign | Signed-in user; organizer ID comes from the session |
 | Edit a campaign | Current user owns the campaign and its status allows editing |
-| Submit a donation | Signed-in member; valid amount; eligible campaign |
-| Read donation history | Query is scoped to the current member |
+| Submit a donation | Signed-in user; valid amount; eligible campaign |
+| Read donation history | Query is scoped to the current user |
 | Publish an update | Current user owns the campaign |
 | Approve a campaign or donation | Current local user has `ADMIN` role |
 
@@ -501,7 +473,7 @@ Run `prisma generate` before type checking or building a fresh checkout that imp
 
 ## Implementation roadmap
 
-- [x] Initialize the project and add Clerk sign-in/sign-up boundaries.
+- [x] Initialize the project and add self-managed sign-in/sign-up boundaries.
 - [ ] Configure Neon credentials, deploy the schema, and resolve production local users.
 - [x] Build reusable controls, navigation, and responsive layouts.
 - [x] Implement organizer campaign drafts and submission boundaries.
@@ -517,10 +489,10 @@ Possible later extensions include campaign images, payment-receipt uploads, noti
 
 Before marking the MVP complete, verify the following with realistic development accounts:
 
-- A new account receives member permissions; signing in resolves the same local user.
+- A new account receives `USER` permissions; signing in resolves the same local user.
 - Anonymous visitors cannot mutate campaigns, donations, or admin resources.
 - One organizer cannot edit another organizer's campaign.
-- A member cannot gain admin privileges through form inputs or direct requests.
+- A user cannot gain admin privileges through form inputs or direct requests.
 - Draft, rejected, and expired campaigns cannot accept new donations.
 - Invalid or missing amounts produce useful errors without creating records.
 - Retrying one donation submission creates only one record.
@@ -535,13 +507,13 @@ Prioritize automated tests for ownership, status transitions, idempotency, and c
 
 ## Deployment
 
-Deploy to a platform that supports the Next.js Node.js server runtime, and connect it to a production Neon database and Clerk production application.
+Deploy to a platform that supports the Next.js Node.js server runtime and connect it to a production Neon database.
 
-1. Configure production database URLs and Clerk keys through the host's environment settings.
+1. Configure production database URLs through the host's environment settings.
 2. Generate Prisma Client before the build: `npx prisma generate`.
 3. Apply committed production migrations through a controlled release step: `npx prisma migrate deploy`.
 4. Build with `npm run build` and start with the host's supported Next.js configuration.
-5. Configure Clerk's production domain and authentication redirects.
+5. Configure secure cookies, trusted domains, and the production admin promotion process.
 6. Verify sign-in, protected routes, campaign visibility, and donation totals after deployment.
 
 Use `migrate dev` for development and `migrate deploy` for production. Keep development and production data separate. The donation interface should clearly indicate when it is recording a demo contribution versus handling a real collection channel.
@@ -554,8 +526,8 @@ Use `migrate dev` for development and `migrate deploy` for production. Keep deve
 | Generated client import fails | Generator output is `../src/generated/prisma`; run `npx prisma generate` |
 | Database connection fails | Copy the full Neon URL, preserve TLS options, and check credentials and network access |
 | Migration cannot create a shadow database | Use a database role with suitable permissions or configure a separate development shadow database |
-| Clerk pages fail | Keys belong to the same Clerk app; provider, proxy, and catch-all pages exist |
-| Admin pages allow ordinary members | Add a server-side local role check; proxy sign-in protection alone is insufficient |
+| Sign-in fails | Confirm `DATABASE_URL`, apply the auth/session migration, and verify the stored password hash |
+| Admin pages allow ordinary users | Add a server-side local role check; the cookie gate alone is insufficient |
 | Tailwind styles do not appear | Preserve the generated PostCSS configuration and global stylesheet import |
 | Campaign total is incorrect | Sum only `VERIFIED` donations using database decimals |
 | A donation appears twice | Enforce the unique idempotency key and reuse it on retries |
@@ -565,8 +537,6 @@ Use `migrate dev` for development and `migrate deploy` for production. Keep deve
 Setup references used for the versioned examples:
 
 - [Next.js installation](https://nextjs.org/docs/app/getting-started/installation)
-- [Clerk Next.js quickstart](https://clerk.com/docs/nextjs/getting-started/quickstart)
-- [Clerk middleware and route protection](https://clerk.com/docs/reference/nextjs/clerk-middleware)
 - [Prisma ORM 7 system requirements](https://www.prisma.io/docs/orm/v7/reference/system-requirements)
 - [Prisma ORM 7 configuration](https://www.prisma.io/docs/orm/v7/reference/prisma-config-reference)
 - [Prisma PostgreSQL and Neon connection setup](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/postgresql)

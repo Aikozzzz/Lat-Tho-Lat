@@ -298,6 +298,7 @@ export type DonationWhereInput = {
   verifiedAt?: Prisma.DateTimeNullableFilter<"Donation"> | Date | string | null
   campaign?: Prisma.XOR<Prisma.CampaignScalarRelationFilter, Prisma.CampaignWhereInput>
   donor?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  evidence?: Prisma.XOR<Prisma.DonationEvidenceNullableScalarRelationFilter, Prisma.DonationEvidenceWhereInput> | null
 }
 
 export type DonationOrderByWithRelationInput = {
@@ -318,6 +319,7 @@ export type DonationOrderByWithRelationInput = {
   verifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   campaign?: Prisma.CampaignOrderByWithRelationInput
   donor?: Prisma.UserOrderByWithRelationInput
+  evidence?: Prisma.DonationEvidenceOrderByWithRelationInput
 }
 
 export type DonationWhereUniqueInput = Prisma.AtLeast<{
@@ -341,6 +343,7 @@ export type DonationWhereUniqueInput = Prisma.AtLeast<{
   verifiedAt?: Prisma.DateTimeNullableFilter<"Donation"> | Date | string | null
   campaign?: Prisma.XOR<Prisma.CampaignScalarRelationFilter, Prisma.CampaignWhereInput>
   donor?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  evidence?: Prisma.XOR<Prisma.DonationEvidenceNullableScalarRelationFilter, Prisma.DonationEvidenceWhereInput> | null
 }, "id" | "idempotencyKey">
 
 export type DonationOrderByWithAggregationInput = {
@@ -403,6 +406,7 @@ export type DonationCreateInput = {
   verifiedAt?: Date | string | null
   campaign: Prisma.CampaignCreateNestedOneWithoutDonationsInput
   donor: Prisma.UserCreateNestedOneWithoutDonationsInput
+  evidence?: Prisma.DonationEvidenceCreateNestedOneWithoutDonationInput
 }
 
 export type DonationUncheckedCreateInput = {
@@ -421,6 +425,7 @@ export type DonationUncheckedCreateInput = {
   idempotencyKey: string
   createdAt?: Date | string
   verifiedAt?: Date | string | null
+  evidence?: Prisma.DonationEvidenceUncheckedCreateNestedOneWithoutDonationInput
 }
 
 export type DonationUpdateInput = {
@@ -439,6 +444,7 @@ export type DonationUpdateInput = {
   verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   campaign?: Prisma.CampaignUpdateOneRequiredWithoutDonationsNestedInput
   donor?: Prisma.UserUpdateOneRequiredWithoutDonationsNestedInput
+  evidence?: Prisma.DonationEvidenceUpdateOneWithoutDonationNestedInput
 }
 
 export type DonationUncheckedUpdateInput = {
@@ -457,6 +463,7 @@ export type DonationUncheckedUpdateInput = {
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  evidence?: Prisma.DonationEvidenceUncheckedUpdateOneWithoutDonationNestedInput
 }
 
 export type DonationCreateManyInput = {
@@ -583,6 +590,11 @@ export type DonationSumOrderByAggregateInput = {
   amount?: Prisma.SortOrder
 }
 
+export type DonationScalarRelationFilter = {
+  is?: Prisma.DonationWhereInput
+  isNot?: Prisma.DonationWhereInput
+}
+
 export type DonationCreateNestedManyWithoutDonorInput = {
   create?: Prisma.XOR<Prisma.DonationCreateWithoutDonorInput, Prisma.DonationUncheckedCreateWithoutDonorInput> | Prisma.DonationCreateWithoutDonorInput[] | Prisma.DonationUncheckedCreateWithoutDonorInput[]
   connectOrCreate?: Prisma.DonationCreateOrConnectWithoutDonorInput | Prisma.DonationCreateOrConnectWithoutDonorInput[]
@@ -679,6 +691,20 @@ export type EnumPaymentMethodFieldUpdateOperationsInput = {
   set?: $Enums.PaymentMethod
 }
 
+export type DonationCreateNestedOneWithoutEvidenceInput = {
+  create?: Prisma.XOR<Prisma.DonationCreateWithoutEvidenceInput, Prisma.DonationUncheckedCreateWithoutEvidenceInput>
+  connectOrCreate?: Prisma.DonationCreateOrConnectWithoutEvidenceInput
+  connect?: Prisma.DonationWhereUniqueInput
+}
+
+export type DonationUpdateOneRequiredWithoutEvidenceNestedInput = {
+  create?: Prisma.XOR<Prisma.DonationCreateWithoutEvidenceInput, Prisma.DonationUncheckedCreateWithoutEvidenceInput>
+  connectOrCreate?: Prisma.DonationCreateOrConnectWithoutEvidenceInput
+  upsert?: Prisma.DonationUpsertWithoutEvidenceInput
+  connect?: Prisma.DonationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DonationUpdateToOneWithWhereWithoutEvidenceInput, Prisma.DonationUpdateWithoutEvidenceInput>, Prisma.DonationUncheckedUpdateWithoutEvidenceInput>
+}
+
 export type DonationCreateWithoutDonorInput = {
   id?: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -694,6 +720,7 @@ export type DonationCreateWithoutDonorInput = {
   createdAt?: Date | string
   verifiedAt?: Date | string | null
   campaign: Prisma.CampaignCreateNestedOneWithoutDonationsInput
+  evidence?: Prisma.DonationEvidenceCreateNestedOneWithoutDonationInput
 }
 
 export type DonationUncheckedCreateWithoutDonorInput = {
@@ -711,6 +738,7 @@ export type DonationUncheckedCreateWithoutDonorInput = {
   idempotencyKey: string
   createdAt?: Date | string
   verifiedAt?: Date | string | null
+  evidence?: Prisma.DonationEvidenceUncheckedCreateNestedOneWithoutDonationInput
 }
 
 export type DonationCreateOrConnectWithoutDonorInput = {
@@ -775,6 +803,7 @@ export type DonationCreateWithoutCampaignInput = {
   createdAt?: Date | string
   verifiedAt?: Date | string | null
   donor: Prisma.UserCreateNestedOneWithoutDonationsInput
+  evidence?: Prisma.DonationEvidenceCreateNestedOneWithoutDonationInput
 }
 
 export type DonationUncheckedCreateWithoutCampaignInput = {
@@ -792,6 +821,7 @@ export type DonationUncheckedCreateWithoutCampaignInput = {
   idempotencyKey: string
   createdAt?: Date | string
   verifiedAt?: Date | string | null
+  evidence?: Prisma.DonationEvidenceUncheckedCreateNestedOneWithoutDonationInput
 }
 
 export type DonationCreateOrConnectWithoutCampaignInput = {
@@ -818,6 +848,94 @@ export type DonationUpdateWithWhereUniqueWithoutCampaignInput = {
 export type DonationUpdateManyWithWhereWithoutCampaignInput = {
   where: Prisma.DonationScalarWhereInput
   data: Prisma.XOR<Prisma.DonationUpdateManyMutationInput, Prisma.DonationUncheckedUpdateManyWithoutCampaignInput>
+}
+
+export type DonationCreateWithoutEvidenceInput = {
+  id?: string
+  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  status?: $Enums.DonationStatus
+  isAnonymous?: boolean
+  paymentMethod: $Enums.PaymentMethod
+  paymentReference?: string | null
+  rejectionReason?: string | null
+  reviewedAt?: Date | string | null
+  reviewedById?: string | null
+  idempotencyKey: string
+  createdAt?: Date | string
+  verifiedAt?: Date | string | null
+  campaign: Prisma.CampaignCreateNestedOneWithoutDonationsInput
+  donor: Prisma.UserCreateNestedOneWithoutDonationsInput
+}
+
+export type DonationUncheckedCreateWithoutEvidenceInput = {
+  id?: string
+  campaignId: string
+  donorId: string
+  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  status?: $Enums.DonationStatus
+  isAnonymous?: boolean
+  paymentMethod: $Enums.PaymentMethod
+  paymentReference?: string | null
+  rejectionReason?: string | null
+  reviewedAt?: Date | string | null
+  reviewedById?: string | null
+  idempotencyKey: string
+  createdAt?: Date | string
+  verifiedAt?: Date | string | null
+}
+
+export type DonationCreateOrConnectWithoutEvidenceInput = {
+  where: Prisma.DonationWhereUniqueInput
+  create: Prisma.XOR<Prisma.DonationCreateWithoutEvidenceInput, Prisma.DonationUncheckedCreateWithoutEvidenceInput>
+}
+
+export type DonationUpsertWithoutEvidenceInput = {
+  update: Prisma.XOR<Prisma.DonationUpdateWithoutEvidenceInput, Prisma.DonationUncheckedUpdateWithoutEvidenceInput>
+  create: Prisma.XOR<Prisma.DonationCreateWithoutEvidenceInput, Prisma.DonationUncheckedCreateWithoutEvidenceInput>
+  where?: Prisma.DonationWhereInput
+}
+
+export type DonationUpdateToOneWithWhereWithoutEvidenceInput = {
+  where?: Prisma.DonationWhereInput
+  data: Prisma.XOR<Prisma.DonationUpdateWithoutEvidenceInput, Prisma.DonationUncheckedUpdateWithoutEvidenceInput>
+}
+
+export type DonationUpdateWithoutEvidenceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumDonationStatusFieldUpdateOperationsInput | $Enums.DonationStatus
+  isAnonymous?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  paymentMethod?: Prisma.EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+  paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  campaign?: Prisma.CampaignUpdateOneRequiredWithoutDonationsNestedInput
+  donor?: Prisma.UserUpdateOneRequiredWithoutDonationsNestedInput
+}
+
+export type DonationUncheckedUpdateWithoutEvidenceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  campaignId?: Prisma.StringFieldUpdateOperationsInput | string
+  donorId?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumDonationStatusFieldUpdateOperationsInput | $Enums.DonationStatus
+  isAnonymous?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  paymentMethod?: Prisma.EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+  paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type DonationCreateManyDonorInput = {
@@ -852,6 +970,7 @@ export type DonationUpdateWithoutDonorInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   campaign?: Prisma.CampaignUpdateOneRequiredWithoutDonationsNestedInput
+  evidence?: Prisma.DonationEvidenceUpdateOneWithoutDonationNestedInput
 }
 
 export type DonationUncheckedUpdateWithoutDonorInput = {
@@ -869,6 +988,7 @@ export type DonationUncheckedUpdateWithoutDonorInput = {
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  evidence?: Prisma.DonationEvidenceUncheckedUpdateOneWithoutDonationNestedInput
 }
 
 export type DonationUncheckedUpdateManyWithoutDonorInput = {
@@ -920,6 +1040,7 @@ export type DonationUpdateWithoutCampaignInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   donor?: Prisma.UserUpdateOneRequiredWithoutDonationsNestedInput
+  evidence?: Prisma.DonationEvidenceUpdateOneWithoutDonationNestedInput
 }
 
 export type DonationUncheckedUpdateWithoutCampaignInput = {
@@ -937,6 +1058,7 @@ export type DonationUncheckedUpdateWithoutCampaignInput = {
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  evidence?: Prisma.DonationEvidenceUncheckedUpdateOneWithoutDonationNestedInput
 }
 
 export type DonationUncheckedUpdateManyWithoutCampaignInput = {
@@ -976,6 +1098,7 @@ export type DonationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   verifiedAt?: boolean
   campaign?: boolean | Prisma.CampaignDefaultArgs<ExtArgs>
   donor?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  evidence?: boolean | Prisma.Donation$evidenceArgs<ExtArgs>
 }, ExtArgs["result"]["donation"]>
 
 export type DonationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1040,6 +1163,7 @@ export type DonationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs =
 export type DonationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   campaign?: boolean | Prisma.CampaignDefaultArgs<ExtArgs>
   donor?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  evidence?: boolean | Prisma.Donation$evidenceArgs<ExtArgs>
 }
 export type DonationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   campaign?: boolean | Prisma.CampaignDefaultArgs<ExtArgs>
@@ -1055,6 +1179,7 @@ export type $DonationPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   objects: {
     campaign: Prisma.$CampaignPayload<ExtArgs>
     donor: Prisma.$UserPayload<ExtArgs>
+    evidence: Prisma.$DonationEvidencePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1468,6 +1593,7 @@ export interface Prisma__DonationClient<T, Null = never, ExtArgs extends runtime
   readonly [Symbol.toStringTag]: "PrismaPromise"
   campaign<T extends Prisma.CampaignDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CampaignDefaultArgs<ExtArgs>>): Prisma.Prisma__CampaignClient<runtime.Types.Result.GetResult<Prisma.$CampaignPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   donor<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  evidence<T extends Prisma.Donation$evidenceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Donation$evidenceArgs<ExtArgs>>): Prisma.Prisma__DonationEvidenceClient<runtime.Types.Result.GetResult<Prisma.$DonationEvidencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1910,6 +2036,25 @@ export type DonationDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many Donations to delete.
    */
   limit?: number
+}
+
+/**
+ * Donation.evidence
+ */
+export type Donation$evidenceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DonationEvidence
+   */
+  select?: Prisma.DonationEvidenceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DonationEvidence
+   */
+  omit?: Prisma.DonationEvidenceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DonationEvidenceInclude<ExtArgs> | null
+  where?: Prisma.DonationEvidenceWhereInput
 }
 
 /**

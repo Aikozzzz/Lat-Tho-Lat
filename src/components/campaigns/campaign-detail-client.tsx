@@ -32,7 +32,7 @@ export function CampaignDetailClient({ campaign }: { campaign: CampaignDetail })
           </div>
         </section>
       </main>
-      <DonationDialog campaign={donationOpen ? campaign : null} onClose={() => setDonationOpen(false)} />
+      <DonationDialog key={donationOpen ? campaign.id : "closed"} campaign={donationOpen ? campaign : null} onClose={() => setDonationOpen(false)} />
     </>
   );
 }

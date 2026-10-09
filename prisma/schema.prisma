@@ -8,7 +8,7 @@ datasource db {
 }
 
 enum Role {
-  MEMBER
+  USER
   ADMIN
 }
 
@@ -35,16 +35,31 @@ enum PaymentMethod {
 }
 
 model User {
-  id        String           @id @default(cuid())
-  clerkId   String           @unique
-  role      Role             @default(MEMBER)
-  campaigns Campaign[]       @relation("CampaignOrganizer")
-  donations Donation[]
-  updates   CampaignUpdate[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id           String           @id @default(cuid())
+  email        String           @unique
+  name         String?
+  passwordHash String
+  role         Role             @default(USER)
+  campaigns    Campaign[]       @relation("CampaignOrganizer")
+  donations    Donation[]
+  updates      CampaignUpdate[]
+  sessions     Session[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Campaign {
@@ -73,26 +88,41 @@ model Campaign {
 }
 
 model Donation {
-  id               String         @id @default(cuid())
+  id               String            @id @default(cuid())
   campaignId       String
-  campaign         Campaign       @relation(fields: [campaignId], references: [id])
+  campaign         Campaign          @relation(fields: [campaignId], references: [id])
   donorId          String
-  donor            User           @relation(fields: [donorId], references: [id])
-  amount           Decimal        @db.Decimal(18, 0)
-  currency         String         @default("MMK")
-  status           DonationStatus @default(PENDING)
-  isAnonymous      Boolean        @default(false)
+  donor            User              @relation(fields: [donorId], references: [id])
+  amount           Decimal           @db.Decimal(18, 0)
+  currency         String            @default("MMK")
+  status           DonationStatus    @default(PENDING)
+  isAnonymous      Boolean           @default(false)
   paymentMethod    PaymentMethod
   paymentReference String?
   rejectionReason  String?
   reviewedAt       DateTime?
   reviewedById     String?
-  idempotencyKey   String         @unique
-  createdAt        DateTime       @default(now())
+  idempotencyKey   String            @unique
+  createdAt        DateTime          @default(now())
   verifiedAt       DateTime?
+  evidence         DonationEvidence?
 
   @@index([campaignId, status])
   @@index([donorId, createdAt])
+}
+
+model DonationEvidence {
+  id           String   @id @default(cuid())
+  donationId   String   @unique
+  donation     Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  storageKey   String
+  contentType  String
+  sizeBytes    Int
+  checksum     String?
+  uploadedById String
+  uploadedAt   DateTime @default(now())
+
+  @@index([uploadedById, uploadedAt])
 }
 
 model CampaignUpdate {

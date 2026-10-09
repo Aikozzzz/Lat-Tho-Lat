@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
-import { createCampaignAction, initialFormActionState } from "@/server/actions/campaign-actions";
+import { createCampaignAction } from "@/server/actions/campaign-actions";
+import { initialFormActionState } from "@/lib/action-state";
 
 export function CampaignForm() {
   const [state, action, pending] = useActionState(createCampaignAction, initialFormActionState);

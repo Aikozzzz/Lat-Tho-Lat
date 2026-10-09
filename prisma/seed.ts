@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { hashPassword } from "../src/lib/password";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required to seed the database.");
@@ -9,9 +10,9 @@ const db = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 async function main() {
   const organizer = await db.user.upsert({
-    where: { clerkId: "seed-organizer" },
+    where: { email: "seed.organizer@lattholat.local" },
     update: {},
-    create: { clerkId: "seed-organizer", role: "MEMBER" },
+    create: { email: "seed.organizer@lattholat.local", name: "Lat Tho Lat member", passwordHash: await hashPassword("seed-password-change-me"), role: "USER" },
   });
 
   const seedCampaigns = [

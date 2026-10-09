@@ -22,7 +22,7 @@ export function CampaignCard({ campaign, onDonate }: CampaignCardProps) {
   const progress = getProgress(campaign.raised, campaign.goal);
 
   return (
-    <article className="group overflow-hidden rounded-[24px] border border-[#e8e7e0] bg-white shadow-[0_12px_35px_rgba(34,42,58,0.04)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(34,42,58,0.1)]">
+    <article data-testid={`campaign-card-${campaign.id}`} className="group overflow-hidden rounded-[24px] border border-[#e8e7e0] bg-white shadow-[0_12px_35px_rgba(34,42,58,0.04)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(34,42,58,0.1)]">
       <div className="relative h-48 overflow-hidden bg-[#e9e8e0]">
         <Image src={campaign.image} alt={campaign.imageAlt} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
         <div className="absolute inset-x-4 top-4 flex items-center justify-between">

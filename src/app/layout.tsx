@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
+import { getCurrentAppUser } from "@/lib/auth";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import "./globals.css";
@@ -9,14 +9,13 @@ export const metadata: Metadata = {
   description: "A community crowdfunding platform for meaningful causes in Myanmar.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const user = await getCurrentAppUser();
+  const content = <><Navbar user={user} />{children}<Footer /></>;
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        {clerkConfigured ? <ClerkProvider>{children}</ClerkProvider> : children}
-        <Footer />
+        {content}
       </body>
     </html>
   );

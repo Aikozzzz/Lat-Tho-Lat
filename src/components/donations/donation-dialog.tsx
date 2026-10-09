@@ -7,7 +7,8 @@ import type { Campaign } from "@/lib/data";
 import { formatMMK, getProgress } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { createDonationAction, initialDonationActionState } from "@/server/actions/donation-actions";
+import { createDonationAction } from "@/server/actions/donation-actions";
+import { initialDonationActionState } from "@/lib/action-state";
 
 type DonationDialogProps = {
   campaign: Campaign | null;
@@ -48,7 +49,7 @@ export function DonationDialog({ campaign, onClose }: DonationDialogProps) {
   const submitted = actionState.status === "success";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#132238]/45 p-0 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="donation-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div data-testid="donation-dialog" className="fixed inset-0 z-50 flex items-end justify-center bg-[#132238]/45 p-0 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="donation-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-t-[28px] bg-[#faf9f6] shadow-[0_20px_80px_rgba(19,34,56,0.25)] sm:rounded-[28px]">
         <div className="flex items-center justify-between border-b border-[#e8e7e0] px-5 py-4 sm:px-7">
           <div className="flex items-center gap-2 text-sm font-semibold text-[#132238]"><LockKeyhole size={15} className="text-[#43a779]" />Your contribution is private by default</div>
@@ -67,7 +68,7 @@ export function DonationDialog({ campaign, onClose }: DonationDialogProps) {
           </div>
         ) : (
           <div className="grid lg:grid-cols-[1fr_360px]">
-            <form action={formAction} className="p-5 sm:p-8">
+            <form data-testid="donation-form" action={formAction} className="p-5 sm:p-8">
               <input type="hidden" name="campaignId" value={campaign.id} />
               <input type="hidden" name="amount" value={String(finalAmount)} />
               <input type="hidden" name="paymentMethod" value={paymentMethod} />
@@ -76,7 +77,7 @@ export function DonationDialog({ campaign, onClose }: DonationDialogProps) {
               <h2 id="donation-title" className="mt-2 max-w-xl text-2xl font-bold tracking-[-0.04em] text-[#132238] sm:text-3xl">Choose an amount for {campaign.title}</h2>
 
               <div className="mt-7 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {presets.map((preset) => <button type="button" key={preset} onClick={() => { setAmount(preset); setCustomAmount(""); }} className={`h-12 rounded-xl border text-sm font-bold transition ${!customAmount && amount === preset ? "border-[#5964d9] bg-[#eeedff] text-[#5147a6]" : "border-[#dfded8] bg-white text-[#495365] hover:border-[#5964d9]"}`}>{formatMMK(preset)} MMK</button>)}
+                {presets.map((preset) => <button data-testid={`donation-preset-${preset}`} type="button" key={preset} onClick={() => { setAmount(preset); setCustomAmount(""); }} className={`h-12 rounded-xl border text-sm font-bold transition ${!customAmount && amount === preset ? "border-[#5964d9] bg-[#eeedff] text-[#5147a6]" : "border-[#dfded8] bg-white text-[#495365] hover:border-[#5964d9]"}`}>{formatMMK(preset)} MMK</button>)}
               </div>
               <label className="mt-3 block text-xs font-semibold text-[#687181]">Or enter another amount
                 <div className={`mt-2 flex h-12 items-center rounded-xl border bg-white px-4 transition ${customAmount ? "border-[#5964d9] ring-2 ring-[#5964d9]/10" : "border-[#dfded8]"}`}><span className="text-sm font-bold text-[#8b919d]">MMK</span><input value={customAmount} onChange={(event) => setCustomAmount(event.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="0" className="ml-3 w-full bg-transparent text-base font-bold text-[#132238] outline-none placeholder:text-[#c0c2c7]" aria-label="Custom donation amount" /></div>
@@ -96,7 +97,7 @@ export function DonationDialog({ campaign, onClose }: DonationDialogProps) {
               </label>
 
               {actionState.status === "error" && <p role="alert" className="mt-4 rounded-xl bg-[#fff0ee] px-4 py-3 text-xs font-semibold leading-5 text-[#b65343]">{actionState.message}</p>}
-              <Button className="mt-6 w-full" size="lg" disabled={pending || finalAmount < 1000}>{pending ? "Recording contribution…" : <>Continue with {formatMMK(finalAmount || 0)} MMK <ChevronRight size={17} /></>}</Button>
+              <Button data-testid="donation-submit" className="mt-6 w-full" size="lg" disabled={pending || finalAmount < 1000}>{pending ? "Recording contribution…" : <>Continue with {formatMMK(finalAmount || 0)} MMK <ChevronRight size={17} /></>}</Button>
               <p className="mt-3 text-center text-[11px] leading-5 text-[#9297a0]">Contributions are recorded as pending until a reviewer verifies the payment reference.</p>
             </form>
             <aside className="border-t border-[#e8e7e0] bg-[#f2f1eb] p-5 sm:p-7 lg:border-l lg:border-t-0">

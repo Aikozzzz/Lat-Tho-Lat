@@ -5,9 +5,7 @@ import { requireCurrentAppUser } from "@/lib/auth";
 import { campaignSchema } from "@/lib/validations/campaign";
 import { updateSchema } from "@/lib/validations/update";
 import { createCampaign, publishCampaignUpdate, submitCampaignForReview } from "@/server/services/campaign-service";
-
-export type FormActionState = { status: "idle" | "success" | "error"; message: string };
-export const initialFormActionState: FormActionState = { status: "idle", message: "" };
+import type { FormActionState } from "@/lib/action-state";
 
 export async function createCampaignAction(_previous: FormActionState, formData: FormData): Promise<FormActionState> {
   const parsed = campaignSchema.safeParse({

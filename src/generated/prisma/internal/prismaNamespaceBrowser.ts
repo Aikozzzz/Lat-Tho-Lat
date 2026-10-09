@@ -52,8 +52,10 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  Session: 'Session',
   Campaign: 'Campaign',
   Donation: 'Donation',
+  DonationEvidence: 'DonationEvidence',
   CampaignUpdate: 'CampaignUpdate',
   AuditLog: 'AuditLog'
 } as const
@@ -76,13 +78,26 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 
 export const UserScalarFieldEnum = {
   id: 'id',
-  clerkId: 'clerkId',
+  email: 'email',
+  name: 'name',
+  passwordHash: 'passwordHash',
   role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const SessionScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeof SessionScalarFieldEnum]
 
 
 export const CampaignScalarFieldEnum = {
@@ -125,6 +140,20 @@ export const DonationScalarFieldEnum = {
 } as const
 
 export type DonationScalarFieldEnum = (typeof DonationScalarFieldEnum)[keyof typeof DonationScalarFieldEnum]
+
+
+export const DonationEvidenceScalarFieldEnum = {
+  id: 'id',
+  donationId: 'donationId',
+  storageKey: 'storageKey',
+  contentType: 'contentType',
+  sizeBytes: 'sizeBytes',
+  checksum: 'checksum',
+  uploadedById: 'uploadedById',
+  uploadedAt: 'uploadedAt'
+} as const
+
+export type DonationEvidenceScalarFieldEnum = (typeof DonationEvidenceScalarFieldEnum)[keyof typeof DonationEvidenceScalarFieldEnum]
 
 
 export const CampaignUpdateScalarFieldEnum = {

@@ -3,6 +3,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import type { AppUser } from "@/lib/auth";
 import { campaigns } from "@/lib/data";
+import type { EvidenceInput } from "@/server/services/types";
 
 type PendingDonationInput = {
   campaignId: string;
@@ -77,7 +78,7 @@ export async function listPendingDonations() {
   if (!db) return Array.from(demoDonations.values());
   return db.donation.findMany({
     where: { status: "PENDING" },
-    include: { campaign: { select: { title: true } }, donor: { select: { clerkId: true } } },
+    include: { campaign: { select: { title: true } }, donor: { select: { email: true } } },
     orderBy: { createdAt: "asc" },
   });
 }
@@ -98,4 +99,17 @@ export async function reviewDonation(input: { donationId: string; status: "VERIF
     db.auditLog.create({ data: { actorId: reviewer.id, action: `DONATION_${input.status}`, entityType: "Donation", entityId: input.donationId, metadata: input.reason ? { reason: input.reason } : undefined } }),
   ]);
   return donation;
+}
+
+export async function attachDonationEvidence(input: EvidenceInput, user: AppUser) {
+  if (!db) return { id: `demo-evidence-${Date.now()}`, ...input };
+  const donation = await db.donation.findUnique({ select: { donorId: true, status: true }, where: { id: input.donationId } });
+  if (!donation) throw new Error("That donation could not be found.");
+  if (donation.donorId !== user.id && user.role !== "ADMIN") throw new Error("You can only attach evidence to your own contribution.");
+  if (donation.status !== "PENDING") throw new Error("Evidence can only be added while a donation is pending.");
+  return db.donationEvidence.upsert({
+    where: { donationId: input.donationId },
+    update: { ...input, uploadedById: user.id },
+    create: { ...input, uploadedById: user.id },
+  });
 }

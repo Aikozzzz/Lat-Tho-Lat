@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
-import { initialFormActionState, publishCampaignUpdateAction } from "@/server/actions/campaign-actions";
+import { publishCampaignUpdateAction } from "@/server/actions/campaign-actions";
+import { initialFormActionState } from "@/lib/action-state";
 
 export function UpdateForm({ campaignId }: { campaignId: string }) {
   const [state, action, pending] = useActionState(publishCampaignUpdateAction, initialFormActionState);

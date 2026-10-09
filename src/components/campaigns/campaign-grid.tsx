@@ -25,7 +25,7 @@ export function CampaignGrid({ campaigns, onDonate }: CampaignGridProps) {
   }, [activeCategory, campaigns, query]);
 
   return (
-    <div>
+    <div data-testid="campaign-grid">
       <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2" role="tablist" aria-label="Campaign categories">
           {categories.map((category) => (
@@ -33,7 +33,7 @@ export function CampaignGrid({ campaigns, onDonate }: CampaignGridProps) {
           ))}
         </div>
         <div className="flex gap-2">
-          <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#e1e0d8] bg-white px-4 text-sm text-[#818793] sm:w-64 sm:flex-none"><Search size={16} /><span className="sr-only">Search campaigns</span><input value={query} onChange={(event) => setQuery(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm text-[#132238] outline-none placeholder:text-[#a1a5ad]" placeholder="Search causes" /></label>
+          <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#e1e0d8] bg-white px-4 text-sm text-[#818793] sm:w-64 sm:flex-none"><Search size={16} /><span className="sr-only">Search campaigns</span><input data-testid="campaign-search" value={query} onChange={(event) => setQuery(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm text-[#132238] outline-none placeholder:text-[#a1a5ad]" placeholder="Search causes" /></label>
           <button type="button" className="grid h-11 w-11 place-items-center rounded-full border border-[#e1e0d8] bg-white text-[#667080] transition hover:border-[#132238] hover:text-[#132238]" aria-label="Filter campaigns"><SlidersHorizontal size={16} /></button>
         </div>
       </div>

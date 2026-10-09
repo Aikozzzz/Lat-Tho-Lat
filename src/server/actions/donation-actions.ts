@@ -5,14 +5,7 @@ import { revalidatePath } from "next/cache";
 import { donationSchema } from "@/lib/validations/donation";
 import { requireCurrentAppUser } from "@/lib/auth";
 import { createPendingDonation } from "@/server/services/donation-service";
-
-export type DonationActionState = {
-  status: "idle" | "success" | "error";
-  message: string;
-  donationId?: string;
-};
-
-export const initialDonationActionState: DonationActionState = { status: "idle", message: "" };
+import type { DonationActionState } from "@/lib/action-state";
 
 export async function createDonationAction(_previous: DonationActionState, formData: FormData): Promise<DonationActionState> {
   const raw = {

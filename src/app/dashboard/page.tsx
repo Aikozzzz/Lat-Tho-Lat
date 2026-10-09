@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Clock3, HeartHandshake, Plus, WalletCards } from "lucide-react";
-import { requireCurrentAppUser } from "@/lib/auth";
+import { requirePageUser } from "@/lib/auth";
 import { listOwnedCampaigns } from "@/server/services/campaign-service";
 import { listDonationsForUser } from "@/server/services/donation-service";
 import { formatMMK, getProgress } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { UpdateForm } from "@/components/dashboard/update-form";
 import { submitCampaignAction } from "@/server/actions/campaign-actions";
 
 export default async function DashboardPage() {
-  const user = await requireCurrentAppUser();
+  const user = await requirePageUser("/dashboard");
   const [ownedCampaigns, donations] = await Promise.all([listOwnedCampaigns(user), listDonationsForUser(user)]);
 
   return (

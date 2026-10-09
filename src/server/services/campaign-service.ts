@@ -37,7 +37,7 @@ function mapDatabaseCampaign(row: {
   goalAmount: unknown;
   deadline: Date;
   status: string;
-  organizer: { clerkId: string };
+  organizer: { email: string; name: string | null };
   donations: Array<{ amount: unknown }>;
 }) : PublicCampaign {
   const raised = row.donations.reduce((total, donation) => total + Number(donation.amount), 0);
@@ -48,7 +48,7 @@ function mapDatabaseCampaign(row: {
     title: row.title,
     category: row.category,
     location: row.location ?? "Myanmar",
-    organizer: row.organizer.clerkId === "demo-member" ? "Lat Tho Lat member" : "Community organizer",
+    organizer: row.organizer.name ?? (row.organizer.email === "seed.organizer@lattholat.local" ? "Lat Tho Lat member" : "Community organizer"),
     organizerRole: "Community organizer",
     raised,
     goal,
@@ -69,13 +69,13 @@ export async function listPublicCampaigns(): Promise<PublicCampaign[]> {
   const rows = await db.campaign.findMany({
     where: { status: { in: [CampaignStatus.ACTIVE, CampaignStatus.COMPLETED] } },
     include: {
-      organizer: { select: { clerkId: true } },
+      organizer: { select: { email: true, name: true } },
       donations: { where: { status: "VERIFIED" }, select: { amount: true } },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  return rows.map(mapDatabaseCampaign);
+  return rows.length ? rows.map(mapDatabaseCampaign) : campaigns.map(mapDemoCampaign);
 }
 
 export async function getPublicCampaign(id: string): Promise<CampaignDetail | null> {
@@ -87,7 +87,7 @@ export async function getPublicCampaign(id: string): Promise<CampaignDetail | nu
   const row = await db.campaign.findFirst({
     where: { id, status: { in: [CampaignStatus.ACTIVE, CampaignStatus.COMPLETED] } },
     include: {
-      organizer: { select: { clerkId: true } },
+      organizer: { select: { email: true, name: true } },
       donations: { where: { status: "VERIFIED" }, select: { amount: true } },
       updates: { orderBy: { createdAt: "desc" }, select: { id: true, title: true, content: true, createdAt: true } },
     },
@@ -142,7 +142,7 @@ export async function listOwnedCampaigns(user: AppUser) {
   const rows = await db.campaign.findMany({
     where: { organizerId: user.id },
     include: {
-      organizer: { select: { clerkId: true } },
+      organizer: { select: { email: true, name: true } },
       donations: { where: { status: "VERIFIED" }, select: { amount: true } },
     },
     orderBy: { updatedAt: "desc" },
@@ -163,7 +163,7 @@ export async function listPendingCampaigns() {
   return db.campaign.findMany({
     where: { status: "PENDING_REVIEW" },
     include: {
-      organizer: { select: { clerkId: true } },
+      organizer: { select: { email: true, name: true } },
       donations: { where: { status: "VERIFIED" }, select: { amount: true } },
     },
     orderBy: { createdAt: "asc" },

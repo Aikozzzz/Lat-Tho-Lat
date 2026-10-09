@@ -10,10 +10,11 @@
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:seed": "tsx prisma/seed.ts",
-    "test:domain": "tsx tests/domain-check.ts"
+    "db:promote-admin": "tsx scripts/promote-admin.ts",
+    "test:domain": "tsx tests/domain-check.ts",
+    "check:env": "node scripts/check-env.mjs"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.9.12",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "dotenv": "^18.0.6",

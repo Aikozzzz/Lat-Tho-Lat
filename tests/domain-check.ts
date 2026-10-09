@@ -15,7 +15,7 @@ async function main() {
   assert.equal(invalid.success, false);
 
   const input = { campaignId: campaigns[0].id, amount: "25000", paymentMethod: "KBZPAY" as const, paymentReference: "demo-123", isAnonymous: false, idempotencyKey: "9f7c2c5a-2df2-4f67-9c92-7f0af9f01a10" };
-  const user = { id: "test-member", clerkId: "test-member", role: "MEMBER" as const };
+  const user = { id: "test-user", email: "test@example.com", name: "Test User", role: "USER" as const };
   const first = await createPendingDonation(input, user);
   const retry = await createPendingDonation(input, user);
   assert.equal(first.id, retry.id);
